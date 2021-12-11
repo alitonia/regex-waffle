@@ -1,0 +1,1 @@
+/, /sample?x=1&y=100, /sample?x=2&y=20000, /sample?x=3&yz=901
