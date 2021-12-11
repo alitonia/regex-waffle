@@ -1,4 +1,7 @@
 import random
+import timeit
+
+SIZE = 50
 
 
 def readFile(filename):
@@ -70,9 +73,13 @@ def unique(list1):
 # )
 
 match, unmatch = (
-	random.sample([x.query for x in frac_match if len(x.query) > 0], 100),
-	random.sample([x.query for x in frac_unmatch if len(x.query) > 0], 100),
+	random.sample([x.query for x in frac_match if len(x.query) > 0], SIZE),
+	random.sample([x.query for x in frac_unmatch if len(x.query) > 0], SIZE),
 )
+
+frac_match = None
+frac_unmatch = None
+
 # print(match[:5], unmatch[:5])
 # exit(0)
 print("set M: ", match[:5])
@@ -99,6 +106,8 @@ def starter(match, unmatch):
 		return chars
 	
 	chars_in_M = charsInSet(match)
+	# process special regex-able character
+	chars_in_M = [('\\' + x if x in ['.', '*', '+'] else x) for x in chars_in_M]
 	print('charset', chars_in_M[:5])
 	
 	def makeRanges(chars_in_M):
@@ -197,6 +206,9 @@ def starter(match, unmatch):
 	                "[.]",  # character class
 	                "[^.]",  # negated character
 	                "..",  # concatenator (binary node)
+	                "..",  # concatenator (binary node)
+	                "..",  # concatenator (binary node)
+	
 	                ".|.",  # disjunction
 	                ]
 	
@@ -204,16 +216,14 @@ def starter(match, unmatch):
 	                "\w", "\W", "\d", "\D", "\b",
 	                "\B", "\A", "\Z", "\s", "\S",
 	                "^\x00-\x7F",
-	                "+",""
+	                "+",
 	                '__'  # emptiness
 	                ]
 	
 	BASING = [
-		# "\+",
 		'[a-zA-Z]+',
 		'[a-zA-Z%0-9]+',
-		# '\d+',
-		# '\w+'
+		'\w+',
 		'\d+'
 	]
 	
@@ -252,7 +262,7 @@ def starter(match, unmatch):
 			self.value = ""
 			self.childrenNum = 0
 			self.id = -1
-
+			
 			if root:
 				self.value = "."
 				self.childrenNum = 2
@@ -359,7 +369,7 @@ def starter(match, unmatch):
 		if node.childrenNum == 3:
 			rr = treeToString(node.right)
 			rt = treeToString(node.third)
-
+		
 		if node.value in FUNCTION_SET:
 			if node.value == ".*":
 				string = rl + "*"
@@ -419,7 +429,7 @@ def starter(match, unmatch):
 				input_val = value if trial == 0 else None
 				n = Node(0, True, input_val)
 				treeString = treeToString(n)
-
+				
 				try:
 					re.compile(treeString)
 					# if compile doesn't throw exception,
@@ -468,8 +478,11 @@ def starter(match, unmatch):
 						for elem in m:
 							# print(elem, wordM)
 							if elem != "":
-								if len(elem) == len(wordM) or elem in wordM:
-									n_m += 1
+								if len(elem) == len(wordM) or (len(wordM) > 0 and elem in wordM):
+									if len(elem) == len(wordM):
+										n_m += 10
+									else:
+										n_m += 0.5
 									foundM = True
 									break
 						if foundM:
@@ -485,17 +498,17 @@ def starter(match, unmatch):
 							if elem != "":
 								if len(elem) == len(wordU) or elem in wordU:
 									# tune this number ?
-									n_u += 0.4
+									n_u += 5
 									foundU = True
 									break
 						if foundU:
 							break
 			
-			return n_m - n_u
+			return n_m - n_u  # prioritize long seq
 		
 		def calculateFitnessRegex(self):
 			regex = treeToString(self.code)
-			return len(regex)
+			return len(regex) // 4
 		
 		def finalFitness(self):
 			try:
@@ -711,7 +724,7 @@ def starter(match, unmatch):
 		population.extend(base)
 		newPopulation = [Individual(match, unmatch) for _ in range(POPULATION_SIZE)]
 		
-		print('httt', [treeToString(x.code) for x in base])
+		# print('httt', [treeToString(x.code) for x in base])
 		
 		solutions = []
 		
@@ -797,12 +810,17 @@ print('----')
 match_parsed = [parse_qs(x) for x in match]
 unmatch_parsed = [parse_qs(x) for x in unmatch]
 
+match = None
+unmatch = None
+
 _match_keys = [[t for t in x.keys()] for x in match_parsed]
 match_keys = []
 for keys in _match_keys:
 	for key in keys:
 		if key not in match_keys:
 			match_keys.append(key)
+
+_match_keys = None
 
 match_entries = dict()
 unmatch_entries = dict()
@@ -835,14 +853,27 @@ for key in match_keys:
 print(match_entries.__len__())
 print(unmatch_entries.__len__())
 
+i = 0
+print(match_keys)
+final = dict()
 for key in match_keys:
+	start = timeit.timeit()
+	
 	focused_match = [' '.join(x) for x in match_entries.get(key)] or []
 	focused_unmatch = [' '.join(x) for x in unmatch_entries.get(key)] or []
 	# focused_unmatch = []
-	
+	print('loop', i, len(focused_unmatch), len(focused_unmatch))
+	i += 1
 	print(key, focused_match[:10], focused_unmatch[:10])
 	if focused_match.__len__() == 1:
 		result = focused_match[0]
 	else:
 		result = starter(focused_match, focused_unmatch)
 	print('--->', key, result)
+	final[key] = result
+	print("hello")
+	end = timeit.timeit()
+	
+	print(end - start)
+	print('')
+
