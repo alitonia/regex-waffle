@@ -201,15 +201,17 @@ def starter(match, unmatch):
 	                ]
 	
 	TERMINAL_SET = ["a-z", "A-Z", "0-9", "^", "$", "%",  # instance independent terminals
-	                "\w", "\W", "\d", "\D", "\b", "\B", "\A", "\Z", "\s", "\S",
+	                "\w", "\W", "\d", "\D", "\b",
+	                "\B", "\A", "\Z", "\s", "\S",
 	                "^\x00-\x7F",
+	                "+",""
 	                '__'  # emptiness
 	                ]
 	
 	BASING = [
 		# "\+",
-		# '[a-zA-Z]+',
-		# '[a-zA-Z%0-9]+',
+		'[a-zA-Z]+',
+		'[a-zA-Z%0-9]+',
 		# '\d+',
 		# '\w+'
 		'\d+'
@@ -223,6 +225,7 @@ def starter(match, unmatch):
 	
 	# ranges go in Terminal set
 	TERMINAL_SET.extend(ranges)
+	TERMINAL_SET.extend(BASING)
 	
 	print('TERMINAL_SET', TERMINAL_SET)
 	
@@ -249,13 +252,15 @@ def starter(match, unmatch):
 			self.value = ""
 			self.childrenNum = 0
 			self.id = -1
-			
+
 			if root:
 				self.value = "."
 				self.childrenNum = 2
 			else:
 				self.value, self.childrenNum = getRandom()
-
+				if value is not None:
+					self.value = value
+					self.childrenNum = 0
 			
 			self.left = None
 			self.right = None
@@ -268,8 +273,12 @@ def starter(match, unmatch):
 				self.right = Node(depth + 1, False)
 				self.third = Node(depth + 1, False)
 			elif self.childrenNum == 2:
-				self.left = Node(depth + 1, False)
-				self.right = Node(depth + 1, False)
+				if value is not None and root:
+					self.left = Node(depth + 1, False, value)
+					self.right = Node(depth + 1, False, '__')
+				else:
+					self.left = Node(depth + 1, False)
+					self.right = Node(depth + 1, False)
 			elif self.childrenNum == 1:
 				self.left = Node(depth + 1, False)
 	
@@ -344,12 +353,13 @@ def starter(match, unmatch):
 		
 		rl = treeToString(node.left)
 		rr = ''
+		rt = ''
 		if node.childrenNum == 2:
 			rr = treeToString(node.right)
 		if node.childrenNum == 3:
 			rr = treeToString(node.right)
 			rt = treeToString(node.third)
-		
+
 		if node.value in FUNCTION_SET:
 			if node.value == ".*":
 				string = rl + "*"
@@ -409,8 +419,7 @@ def starter(match, unmatch):
 				input_val = value if trial == 0 else None
 				n = Node(0, True, input_val)
 				treeString = treeToString(n)
-				if value in BASING:
-					print('it', input_val, value, treeString, trial)
+
 				try:
 					re.compile(treeString)
 					# if compile doesn't throw exception,
@@ -495,11 +504,11 @@ def starter(match, unmatch):
 				return -100000
 	
 	# (based on documentation)
-	POPULATION_SIZE = 10  # may adjust with size
+	POPULATION_SIZE = 200  # may adjust with size
 	GENERATIONS_NUM = 1000
 	POPULATION_NUM = 8
 	TOURNAMENT_SIZE = 7
-	MUTATION_PROB = 0.6
+	MUTATION_PROB = 0.15
 	ELITIZM_SIZE = int(0.2 * POPULATION_SIZE)
 	
 	import copy
@@ -717,10 +726,8 @@ def starter(match, unmatch):
 			# print([treeToString(x.code) for x in solutions])
 			
 			# if treeToString(population[0].code) in BASING:
-			print(treeToString(population[0].code), population[0].fitnessFunction)
-			print('heh', [treeToString(x.code) for x in population])
-			if i > 30:
-				exit(0)
+			# print(treeToString(population[0].code), population[0].fitnessFunction)
+			# print('heh', [treeToString(x.code) for x in population])
 			if population[0].fitnessFunction == num_m:
 				solutions.append(population[0])
 			
@@ -745,6 +752,21 @@ def starter(match, unmatch):
 			solutions.append(population[0])
 		
 		return solutions
+	
+	# test = Node(0, True)
+	# test.childrenNum = 2
+	# test.left = Node(1, False, '[a-zA-Z%0-9]+')
+	# test.left.childrenNum = 0
+	# test.right = Node(1, False, '__')
+	# test.right.childrenNum = 0
+	# test.right.right = Node(1, False, '\w+')
+	
+	# [a-zA-Z0-9]+
+	
+	# x = treeToString(test)
+	#
+	# print('edd', x)
+	# exit()
 	
 	res = []
 	last_top = None
@@ -815,8 +837,8 @@ print(unmatch_entries.__len__())
 
 for key in match_keys:
 	focused_match = [' '.join(x) for x in match_entries.get(key)] or []
-	# focused_unmatch = [' '.join(x) for x in unmatch_entries.get(key)] or []
-	focused_unmatch = []
+	focused_unmatch = [' '.join(x) for x in unmatch_entries.get(key)] or []
+	# focused_unmatch = []
 	
 	print(key, focused_match[:10], focused_unmatch[:10])
 	if focused_match.__len__() == 1:

@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8914abd7-18ae-41ff-9eb1-a811ee721429" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/source/regex_golf.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/source/regex_golf.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/generapture.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/generapture.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +37,7 @@
       <option name="presentableId" value="Default" />
       <updated>1639164853268</updated>
       <workItem from="1639164856081" duration="2414000" />
+      <workItem from="1639226814886" duration="6442000" />
     </task>
     <servers />
   </component>
