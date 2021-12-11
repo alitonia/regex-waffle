@@ -128,7 +128,7 @@ def starter(match, unmatch):
 		return ranges
 	
 	ranges = makeRanges(chars_in_M)
-	print(ranges)
+	print('ranges', ranges)
 	
 	def ngram(M, U):
 		res = {}
@@ -177,15 +177,18 @@ def starter(match, unmatch):
 	# for which total score equals at least |M|
 	# (|M| = number of elements in M)
 	ngram_subset = []
-	score = 0
-	
-	for i in range(len(ngrams)):
-		if ngrams[i][1] > 0:  # we update only if score is positive
-			score += ngrams[i][1]
-			ngram_subset.append(ngrams[i][0])
-			
-			if score >= num_m:
-				break
+	if len(ngrams) == 1:
+		ngram_subset = [ngrams[0]]
+	else:
+		score = 0
+		
+		for i in range(len(ngrams)):
+			if ngrams[i][1] > 0:  # we update only if score is positive
+				score += ngrams[i][1]
+				ngram_subset.append(ngrams[i][0])
+				
+				if score >= num_m:
+					break
 	
 	print('ngram_subset', ngram_subset)
 	
@@ -199,8 +202,18 @@ def starter(match, unmatch):
 	
 	TERMINAL_SET = ["a-z", "A-Z", "0-9", "^", "$", "%",  # instance independent terminals
 	                "\w", "\W", "\d", "\D", "\b", "\B", "\A", "\Z", "\s", "\S",
-	                "^\x00-\x7F", "\%", "+",
+	                "^\x00-\x7F",
+	                '__'  # emptiness
 	                ]
+	
+	BASING = [
+		# "\+",
+		# '[a-zA-Z]+',
+		# '[a-zA-Z%0-9]+',
+		# '\d+',
+		# '\w+'
+		'\d+'
+	]
 	
 	# chars_in_M set goes in Terminal set
 	TERMINAL_SET.extend(chars_in_M)
@@ -231,7 +244,7 @@ def starter(match, unmatch):
 			return value, 0
 	
 	class Node(object):
-		def __init__(self, depth, root):
+		def __init__(self, depth, root, value=None):
 			self.depth = depth
 			self.value = ""
 			self.childrenNum = 0
@@ -242,12 +255,15 @@ def starter(match, unmatch):
 				self.childrenNum = 2
 			else:
 				self.value, self.childrenNum = getRandom()
+
 			
 			self.left = None
 			self.right = None
 			self.third = None
 			
-			if self.childrenNum == 3:
+			if self.value == '__':
+				self.childrenNum = 0
+			elif self.childrenNum == 3:
 				self.left = Node(depth + 1, False)
 				self.right = Node(depth + 1, False)
 				self.third = Node(depth + 1, False)
@@ -315,14 +331,19 @@ def starter(match, unmatch):
 		return parentMap
 	
 	def treeToString(node):
+		if node is None:
+			return ''
 		if node.value in TERMINAL_SET:
 			if node.value == "%":
 				return "."
-			elif node.value == '\%':
+			elif node.value == r'\%':
 				return "%"
+			elif node.value == '__':
+				return ''
 			return node.value
 		
 		rl = treeToString(node.left)
+		rr = ''
 		if node.childrenNum == 2:
 			rr = treeToString(node.right)
 		if node.childrenNum == 3:
@@ -364,9 +385,10 @@ def starter(match, unmatch):
 		return string
 	
 	class Individual:
-		def __init__(self, setM, setU):
+		def __init__(self, setM, setU, value=None):
+			
 			# code is abstract tree which saves regex
-			self.code = self.initialize()
+			self.code = self.initialize(value)
 			self.wi = 10
 			# setM and setU are sets M and U from beginning
 			self.setM = setM.copy()
@@ -380,11 +402,15 @@ def starter(match, unmatch):
 			# and it should be maximized
 			self.fitness = self.finalFitness()
 		
-		def initialize(self):
+		def initialize(self, value=None):
 			generated = False
+			trial = 0
 			while not generated:
-				n = Node(0, True)
+				input_val = value if trial == 0 else None
+				n = Node(0, True, input_val)
 				treeString = treeToString(n)
+				if value in BASING:
+					print('it', input_val, value, treeString, trial)
 				try:
 					re.compile(treeString)
 					# if compile doesn't throw exception,
@@ -393,7 +419,9 @@ def starter(match, unmatch):
 					generated = True
 				except Exception:
 					generated = False
-			
+					trial += 1
+					if trial > 1000:
+						raise Exception('Too much wrong regex')
 			return n
 		
 		# check if current regex is valid
@@ -421,35 +449,38 @@ def starter(match, unmatch):
 			for wordM in self.setM:
 				# matchM - list of strings that are matched
 				matchM = re.findall(regex, wordM)
+				
 				foundM = False
 				
-				for m in matchM:
-					# in case of character | in regex,
-					# m can have more elements
-					for elem in m:
-						if elem != "":
-							if len(elem) == len(wordM) or elem in wordM:
-								n_m += 1
-								foundM = True
-								break
-					if foundM:
-						break
+				if matchM:
+					for m in matchM:
+						# in case of character | in regex,
+						# m can have more elements
+						for elem in m:
+							# print(elem, wordM)
+							if elem != "":
+								if len(elem) == len(wordM) or elem in wordM:
+									n_m += 1
+									foundM = True
+									break
+						if foundM:
+							break
 			
 			for wordU in self.setU:
 				matchU = re.findall(regex, wordU)
 				foundU = False
 				
-				for m in matchU:
-					for elem in m:
-						if elem != "":
-							if len(elem) == len(wordU) or elem in wordU:
-								# tune this number ?
-								
-								n_u += 1
-								foundU = True
-								break
-					if foundU:
-						break
+				if matchU:
+					for m in matchU:
+						for elem in m:
+							if elem != "":
+								if len(elem) == len(wordU) or elem in wordU:
+									# tune this number ?
+									n_u += 0.4
+									foundU = True
+									break
+						if foundU:
+							break
 			
 			return n_m - n_u
 		
@@ -464,11 +495,11 @@ def starter(match, unmatch):
 				return -100000
 	
 	# (based on documentation)
-	POPULATION_SIZE = 200  # may adjust with size
+	POPULATION_SIZE = 10  # may adjust with size
 	GENERATIONS_NUM = 1000
-	POPULATION_NUM = 32
+	POPULATION_NUM = 8
 	TOURNAMENT_SIZE = 7
-	MUTATION_PROB = 0.3
+	MUTATION_PROB = 0.6
 	ELITIZM_SIZE = int(0.2 * POPULATION_SIZE)
 	
 	import copy
@@ -666,8 +697,12 @@ def starter(match, unmatch):
 						q.append(n.third)
 	
 	def genetic_programming(match, unmatch):
-		population = [Individual(match, unmatch) for _ in range(POPULATION_SIZE)]
+		base = [Individual(match, unmatch, term) for term in BASING]
+		population = [Individual(match, unmatch) for _ in range(POPULATION_SIZE - len(base))]
+		population.extend(base)
 		newPopulation = [Individual(match, unmatch) for _ in range(POPULATION_SIZE)]
+		
+		print('httt', [treeToString(x.code) for x in base])
 		
 		solutions = []
 		
@@ -679,6 +714,13 @@ def starter(match, unmatch):
 			# num_m - num_u = num_m
 			# we save it in solutions
 			# (it is candidate for best solution)
+			# print([treeToString(x.code) for x in solutions])
+			
+			# if treeToString(population[0].code) in BASING:
+			print(treeToString(population[0].code), population[0].fitnessFunction)
+			print('heh', [treeToString(x.code) for x in population])
+			if i > 30:
+				exit(0)
 			if population[0].fitnessFunction == num_m:
 				solutions.append(population[0])
 			
@@ -773,7 +815,12 @@ print(unmatch_entries.__len__())
 
 for key in match_keys:
 	focused_match = [' '.join(x) for x in match_entries.get(key)] or []
-	focused_unmatch = [' '.join(x) for x in unmatch_entries.get(key)] or []
+	# focused_unmatch = [' '.join(x) for x in unmatch_entries.get(key)] or []
+	focused_unmatch = []
+	
 	print(key, focused_match[:10], focused_unmatch[:10])
-	result = starter(focused_match, focused_unmatch)
+	if focused_match.__len__() == 1:
+		result = focused_match[0]
+	else:
+		result = starter(focused_match, focused_unmatch)
 	print('--->', key, result)
