@@ -887,7 +887,7 @@ padding = '[a-zA-Z0-9]*'
 
 def post_processing(patterns: Dict[str, str]):
 	# note: if v start with ^, will not display correctly
-	blob = [f"{k}=({padding}{v}{padding})" for (k, v) in patterns.items()]
+	blob = [f"{k}=({padding}{v}{padding if v[-1] != '$' else ''})" for (k, v) in patterns.items()]
 	target = ''
 	for (index, val) in enumerate(blob):
 		if index != len(blob) - 1:
@@ -905,6 +905,7 @@ def post_processing(patterns: Dict[str, str]):
 
 
 if __name__ == '__main__':
-	FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
-	x = post_processing(generate_regex(FILE_NAME))
-	print('Final result', x)
+	print(post_processing(dict({'x':'9$'})))
+	# FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
+	# x = post_processing(generate_regex(FILE_NAME))
+	# print('Final result', x)
