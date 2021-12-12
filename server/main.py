@@ -30,7 +30,7 @@ def rnd_str(n: int = 15):
 
 def write_file(filename: str, data: str):
 	with open(os.path.join('sv_data/req/', filename), 'w+') as f:
-		f.write(data)
+		f.write(data + '\n')
 
 
 class InputLog(BaseModel):
@@ -50,7 +50,7 @@ def general_processing(s: str):
 	except Exception:
 		print('Not OK')
 		return None
-	
+
 
 app = FastAPI(port=8000)
 app.mount("/static", StaticFiles(directory="JunoX"), name="static")

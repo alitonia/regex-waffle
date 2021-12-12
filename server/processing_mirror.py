@@ -907,7 +907,7 @@ def post_processing(patterns: Dict[str, str]):
 
 if __name__ == '__main__':
 	# FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
-	FILE_NAME = 'file_KKYQ7EHGROAG6T9.txt'
+	FILE_NAME = 'file_8P4W9ZGGDBB8KBM.txt'
 	
 	x = post_processing(generate_regex(FILE_NAME))
 	print('Final result', x)
