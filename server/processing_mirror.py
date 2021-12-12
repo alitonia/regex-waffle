@@ -905,7 +905,7 @@ def post_processing(patterns: Dict[str, str]):
 
 
 if __name__ == '__main__':
-	print(post_processing(dict({'x':'9$'})))
-	# FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
-	# x = post_processing(generate_regex(FILE_NAME))
-	# print('Final result', x)
+	# print(post_processing(dict({'x':'9$'})))
+	FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
+	x = post_processing(generate_regex(FILE_NAME))
+	print('Final result', x)

@@ -75,8 +75,8 @@ def uploadData(input: str = Body(..., embed=True)):
 	
 	if uri_s:
 		write_file(filename, ', '.join(uri_s))
-		rg_dict = generate_regex(filename)
-		print(rg_dict.values())
+		# rg_dict = generate_regex(filename)
+		# print(rg_dict.values())
 		return {'filename': filename}
 	else:
 		return {'status': '?'}
