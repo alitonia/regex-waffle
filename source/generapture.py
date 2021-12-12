@@ -859,8 +859,8 @@ final = dict()
 for key in match_keys:
 	start = timeit.timeit()
 	
-	focused_match = [' '.join(x) for x in match_entries.get(key)] or []
-	focused_unmatch = [' '.join(x) for x in unmatch_entries.get(key)] or []
+	focused_match = [' '.join(x) for x in (match_entries.get(key) or []) ]
+	focused_unmatch = [' '.join(x) for x in (unmatch_entries.get(key) or []) ]
 	# focused_unmatch = []
 	print('loop', i, len(focused_unmatch), len(focused_unmatch))
 	i += 1

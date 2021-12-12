@@ -36,6 +36,7 @@ def unique(list1):
 def generate_regex(filename: str):
 	# word sets M and U
 	match, unmatch = readFile(filename)
+	print('match', match[:5])
 	
 	#  unmatch and match uri list
 	frac_match = [urlparse(x) for x in match]
@@ -483,7 +484,7 @@ def generate_regex(filename: str):
 										if len(elem) == len(wordM):
 											n_m += 10
 										else:
-											n_m += 0.5
+											n_m += 2 * len(elem)
 										foundM = True
 										break
 							if foundM:
@@ -905,7 +906,8 @@ def post_processing(patterns: Dict[str, str]):
 
 
 if __name__ == '__main__':
-	# print(post_processing(dict({'x':'9$'})))
-	FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
+	# FILE_NAME = 'file_KMJV5HU1H9OE11R.txt'
+	FILE_NAME = 'file_KKYQ7EHGROAG6T9.txt'
+	
 	x = post_processing(generate_regex(FILE_NAME))
 	print('Final result', x)
